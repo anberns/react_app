@@ -27,20 +27,13 @@ passport.use(new GoogleStrategy({
     callbackURL: '/auth/google/callback',
     proxy: true
     }, 
-    (accessToken, refreshToken, profile, done) => {
-        User.findOne({ googleId: profile.id })
-            //promise for async database communication
-            .then((existingUser) => {
-                if (existingUser) {
-                    // already have a document
-                    done(null, existingUser); // null is err param
-                }
-                else {
-                    // create and save new document
-                    new User({ googleId: profile.id })
-                        .save()
-                        .then(user => done(null, user)); // user is returned promise
-                }
-            })
+    async (accessToken, refreshToken, profile, done) => {
+        const existingUser = await User.findOne({ googleId: profile.id })
+            if (existingUser) {
+                return done(null, existingUser); // null is err param
+            }
+
+            const user = await new User({ googleId: profile.id }).save()
+            done(null, user);
     }
 ));
